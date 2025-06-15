@@ -1,0 +1,128 @@
+/* Base Styles */
+body {
+    font-family: 'Segoe UI', sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #f5f7fa;
+}
+
+nav {
+    background: #0174a2;
+    padding: 1rem;
+    display: flex;
+    gap: 1.5rem;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+#connection-status {
+    margin-left: auto;
+    color: white;
+}
+
+/* Section Styles */
+section {
+    padding: 1rem;
+    margin: 1rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.control-panel {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.terminal {
+    height: 300px;
+    overflow-y: auto;
+    font-family: monospace;
+    white-space: pre-wrap;
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 4px;
+}
+
+/* JSON Packet Styling */
+.json-packet {
+    margin-bottom: 1rem;
+    border-left: 3px solid #0174a2;
+    padding-left: 0.5rem;
+}
+
+.json-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+/* Table Styles */
+#transactions-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#transactions-table th, #transactions-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+#transactions-table tr:hover {
+    background-color: #f5f5f5;
+}
+
+/* Chart Container */
+.chart-container {
+    height: 300px;
+    margin-bottom: 1rem;
+}
+
+/* JSON Packet Styling */
+.json-packet {
+    margin-bottom: 1rem;
+    border-left: 3px solid #4CAF50;
+    padding-left: 0.75rem;
+    background: #f8f8f8;
+    border-radius: 0 4px 4px 0;
+}
+
+.json-header {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.json-header .timestamp {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.json-header .message-type {
+    font-weight: bold;
+    color: #2196F3;
+}
+
+.json-header .action {
+    color: #FF5722;
+}
+
+pre {
+    margin: 0;
+    white-space: pre-wrap;
+    font-family: 'Consolas', monospace;
+}
+
+/* JSON Syntax Highlighting */
+.json-key { color: #9C27B0; }
+.json-string { color: #4CAF50; }
+.json-number { color: #F44336; }
+.json-literal { color: #2196F3; }

@@ -1,0 +1,351 @@
+1st executed code for the serail monitoring and unable to extract all the OCPP packets and fomrat is too bad.
+
+main.html
+=========
+<!DOCTYPE html>
+ <html lang="en" xml:lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>OCPP Serial Monitor</title>
+    <link rel="stylesheet" href="css/style_main.css">
+    <script src="js/connection-manager.js"></script>
+    <script src="js/ocpp-processor.js"></script>
+    <script src="js/main.js" defer></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Connection Panel -->
+        <div class="control-panel">
+            <select id="baud-rate">
+                <option value="9600">9600</option>
+                <option value="115200" selected>115200</option>
+            </select>
+            <button id="connect-btn">Connect</button>
+            <button id="disconnect-btn" disabled>Disconnect</button>
+            <span id="connection-status">🔴 Disconnected</span>
+        </div>
+
+        <!-- Terminal Output -->
+        <div class="terminal" id="terminal"></div>
+
+        <!-- JSON Packets -->
+        <div class="json-panel">
+            <h3>OCPP Packets</h3>
+            <div id="json-packets"></div>
+        </div>
+
+        <!-- Transaction Details -->
+        <div class="transactions-panel">
+            <h3>Transactions</h3>
+            <table id="transactions-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Start Time</th>
+                        <th>Energy (Wh)</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="transactions-body"></tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
+
+main.js
+=======
+document.addEventListener('DOMContentLoaded', () => {
+    const terminal = document.getElementById('terminal');
+    const jsonPanel = document.getElementById('json-packets');
+    const transactionsBody = document.getElementById('transactions-body');
+    const connectBtn = document.getElementById('connect-btn');
+    const disconnectBtn = document.getElementById('disconnect-btn');
+    const baudRateSelect = document.getElementById('baud-rate');
+    const connectionStatus = document.getElementById('connection-status');
+
+    const serialConnection = new SerialConnection();
+    const ocppProcessor = new OCPPProcessor();
+
+    // Update UI with received data
+    serialConnection.onDataCallback = (data) => {
+        terminal.textContent += data;
+        ocppProcessor.processData(data);
+        updateJsonPanel();
+        updateTransactionsTable();
+    };
+
+    // Handle disconnection
+    serialConnection.onDisconnectCallback = () => {
+        connectionStatus.textContent = "🔴 Disconnected";
+        connectBtn.disabled = false;
+        disconnectBtn.disabled = true;
+    };
+
+    // Connect button
+    connectBtn.addEventListener('click', async () => {
+        const baudRate = parseInt(baudRateSelect.value);
+        const connected = await serialConnection.connect(baudRate);
+        
+        if (connected) {
+            connectionStatus.textContent = "🟢 Connected";
+            connectBtn.disabled = true;
+            disconnectBtn.disabled = false;
+        }
+    });
+
+    // Disconnect button
+    disconnectBtn.addEventListener('click', () => {
+        serialConnection.disconnect();
+    });
+
+    // Update JSON panel
+    function updateJsonPanel() {
+        jsonPanel.innerHTML = ocppProcessor.getJsonPackets()
+            .map(packet => `<pre>${JSON.stringify(packet, null, 2)}</pre>`)
+            .join('<hr>');
+    }
+
+    // Update transactions table
+    function updateTransactionsTable() {
+        transactionsBody.innerHTML = ocppProcessor.getTransactions()
+            .map(tx => `
+                <tr>
+                    <td>${tx.idTag}</td>
+                    <td>${tx.startTime.toLocaleString()}</td>
+                    <td>${tx.energyUsed || '-'}</td>
+                    <td>${tx.status}</td>
+                </tr>
+            `)
+            .join('');
+    }
+});
+
+ocpp-processor.js
+==================
+class OCPPProcessor {
+    constructor() {
+        this.transactions = {};
+        this.jsonPackets = [];
+    }
+
+    processData(rawData) {
+        // Extract JSON packets
+        const packets = this._extractJsonPackets(rawData);
+        
+        packets.forEach(packet => {
+            try {
+                const json = JSON.parse(packet);
+                this.jsonPackets.push(json);
+                this._processOCPP(json);
+            } catch (e) {
+                console.warn("Invalid JSON:", packet);
+            }
+        });
+    }
+
+    _extractJsonPackets(str) {
+        const packets = [];
+        let depth = 0;
+        let start = -1;
+
+        for (let i = 0; i < str.length; i++) {
+            if (str[i] === '[') {
+                if (depth === 0) start = i;
+                depth++;
+            } else if (str[i] === ']') {
+                depth--;
+                if (depth === 0 && start !== -1) {
+                    packets.push(str.substring(start, i + 1));
+                    start = -1;
+                }
+            }
+        }
+        return packets;
+    }
+
+    _processOCPP(packet) {
+        if (!Array.isArray(packet)) return;
+
+        const [messageType, messageId, action, payload] = packet;
+
+        if (messageType === 2) { // Request
+            if (action === "StartTransaction") {
+                this._handleStartTransaction(payload);
+            } else if (action === "StopTransaction") {
+                this._handleStopTransaction(payload);
+            }
+        } else if (messageType === 3) { // Response
+            this._handleResponse(messageId, payload);
+        }
+    }
+
+    _handleStartTransaction(payload) {
+        const txId = `${payload.idTag}-${payload.timestamp}`;
+        this.transactions[txId] = {
+            idTag: payload.idTag,
+            meterStart: payload.meterStart,
+            startTime: new Date(payload.timestamp),
+            status: "Started"
+        };
+    }
+
+    _handleStopTransaction(payload) {
+        const tx = this.transactions[payload.transactionId];
+        if (tx) {
+            tx.meterStop = payload.meterStop;
+            tx.stopTime = new Date(payload.timestamp);
+            tx.status = "Completed";
+            tx.energyUsed = tx.meterStop - tx.meterStart;
+        }
+    }
+
+    _handleResponse(messageId, payload) {
+        // Handle responses if needed
+    }
+
+    getTransactions() {
+        return Object.values(this.transactions);
+    }
+
+    getJsonPackets() {
+        return this.jsonPackets;
+    }
+}
+
+conection-manager.js
+=====================
+class SerialConnection {
+    constructor() {
+        this.port = null;
+        this.reader = null;
+        this.writer = null;
+        this.onDataCallback = null;
+        this.onDisconnectCallback = null;
+    }
+
+    async connect(baudRate = 115200) {
+        try {
+            this.port = await navigator.serial.requestPort();
+            await this.port.open({ baudRate });
+            
+            this.reader = this.port.readable.getReader();
+            this.writer = this.port.writable.getWriter();
+            
+            this._readLoop();
+            return true;
+        } catch (error) {
+            console.error("Connection failed:", error);
+            return false;
+        }
+    }
+
+    async disconnect() {
+        if (this.reader) {
+            await this.reader.cancel();
+            this.reader.releaseLock();
+            this.reader = null;
+        }
+        if (this.writer) {
+            this.writer.releaseLock();
+            this.writer = null;
+        }
+        if (this.port) {
+            await this.port.close();
+            this.port = null;
+        }
+        if (this.onDisconnectCallback) {
+            this.onDisconnectCallback();
+        }
+    }
+
+    async send(data) {
+        if (!this.writer) return false;
+        const encoder = new TextEncoder();
+        await this.writer.write(encoder.encode(data + '\n'));
+        return true;
+    }
+
+    async _readLoop() {
+        const decoder = new TextDecoder();
+        try {
+            while (true) {
+                const { value, done } = await this.reader.read();
+                if (done) break;
+                const text = decoder.decode(value);
+                if (this.onDataCallback) {
+                    this.onDataCallback(text);
+                }
+            }
+        } catch (error) {
+            console.error("Read error:", error);
+        } finally {
+            this.disconnect();
+        }
+    }
+}
+
+style-main.css
+=============
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background: #f5f5f5;
+}
+
+.container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.control-panel {
+    grid-column: 1 / -1;
+    background: white;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.terminal, .json-panel, .transactions-panel {
+    background: white;
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    height: 300px;
+    overflow-y: auto;
+}
+
+.terminal {
+    font-family: monospace;
+    white-space: pre-wrap;
+}
+
+.json-panel pre {
+    background: #f8f8f8;
+    padding: 10px;
+    border-radius: 3px;
+}
+
+#transactions-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#transactions-table th, #transactions-table td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+#transactions-table tr:hover {
+    background: #f5f5f5;
+}
+
+#connection-status {
+    margin-left: 10px;
+    font-weight: bold;
+}
