@@ -209,9 +209,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // ==================== OCPP PROCESSING ====================
     function processOcppPacket(packet) {
-        // if (!isOcppPacket(packet)) return;
-        //USe below if condition or the above function
-        if (!Array.isArray(packet) || (packet[0] !== 2 && packet[0] !== 3)) return;
+        if (!isOcppPacket(packet)) return;
 
         try {
             const messageType = packet[0];
@@ -233,10 +231,6 @@ document.addEventListener("DOMContentLoaded", function() {
                     case "MeterValues":
                         handleMeterValues(payload);
                         break;
-                    case "StatusNotification":
-                        // Just display, don't add to transactions
-                        appendToSerialData(`\n[Status: ${payload.status} on connector ${payload.connectorId}]\n`, "info");
-                        break;
                 }
             } else if (messageType === 3) { // Response
                 const responsePayload = packet[2] || {};
@@ -245,7 +239,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 if (requestPacket) {
                     const requestAction = requestPacket[2];
                     
-                    if (requestAction === "StartTransaction" && responsePayload.transactionId) {
+                    if (requestAction === "StartTransaction") {
                         handleStartTransactionResponse(requestPacket, responsePayload);
                     }
                     else if (requestAction === "StopTransaction") {
@@ -287,27 +281,12 @@ document.addEventListener("DOMContentLoaded", function() {
             stopTime: new Date().toLocaleString(),
             meterStop: payload.meterStop || state.transactions[transactionId].meterStart,
             energyWh: (payload.meterStop || 0) - (state.transactions[transactionId].meterStart || 0),
-            status: payload.status || "Completed",
+            status: "Completed",
             reason: payload.reason || "Normal"
         };
         
         updateTransactionTable();
     }
-
-
-    function handleMeterValues(payload = {}) {
-        const transactionId = payload.transactionId;
-        if (!transactionId || !state.transactions[transactionId]) return;
-
-        const meterValue = payload.meterValue?.[0]?.sampledValue?.[0]?.value;
-        if (meterValue) {
-            state.transactions[transactionId].meterStop = meterValue;
-            state.transactions[transactionId].energyWh = meterValue - (state.transactions[transactionId].meterStart || 0);
-        }
-        
-        updateTransactionTable();
-    }
-
 
     // ==================== UI FUNCTIONS ====================
     function displayJsonPacket(rawJson, parsedJson) {
@@ -388,11 +367,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     function syntaxHighlightJSON(json) {
         if (!json) return '';
-
-        // First remove any existing HTML tags that might have been added previously
-        const cleanJson = json.replace(/<[^>]*>?/gm, '');
-
-        return cleanJson
+        return json
             .replace(/("[^"]+"):/g, '<span class="json-key">$1</span>:')
             .replace(/"([^"]+)"/g, '<span class="json-string">"$1"</span>')
             .replace(/\b(true|false|null)\b/g, '<span class="json-boolean">$1</span>')
