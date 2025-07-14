@@ -12,6 +12,19 @@
     --text-light: #fff;
     --request-color: #3498db;
     --response-color: #2ecc71;
+
+    --json-key:#43bbf3;
+    --json-string:#6a8759;
+    --json-number:#036d0e;
+    --json-boolean:#cc7832;
+    --json-null:#d35400;
+    --json-value-accepted:#27ae60;
+    --json-value-available:#27ae60;
+    --json-value-rejected:#c0392b;
+    --json-value-faulted:#c0392b;
+    --json-value-charging:#2980b9;
+
+
 }
 
 * {
@@ -218,11 +231,40 @@ pre {
     font-size: 0.85rem;
 }
 
-.json-key { color: #d44950; }
-.json-string { color: #6a8759; }
-.json-number { color: #6897bb; }
-.json-boolean { color: #cc7832; }
+.json-key { color: var(--json-key); }  /* font-weight: bold;*/
+.json-string { color: var(--json-string); }
+.json-number { color: var(--json-number); }
+.json-boolean { color: var(--json-boolean); } /* font-weight: bold;*/
 
+.json-null { color: var(--json-null); font-weight: bold; }
+
+/* Custom value-based colors */
+.json-value-accepted{ 
+    color: var(--json-value-accepted); /* Green */
+    font-weight: bold;
+}
+.json-value-available { 
+    color: var(--json-value-available); /* Green */
+    font-weight: bold;
+}
+.json-value-rejected{ 
+    color: var(--json-value-rejected); /* Red */
+    font-weight: bold;
+}
+.json-value-faulted { 
+    color: var(--json-value-faulted); /* Red */
+    font-weight: bold;
+}
+.json-value-charging { 
+    color: var(--json-value-charging); /* Blue */
+    font-weight: bold;
+}
+mark {
+    background-color: #f1c40f; /* Yellow highlight */
+    padding: 2px;
+    border-radius: 3px;
+    color: black;
+}
 /* ===== STATUS INDICATORS ===== */
 .status-active { color: var(--primary-blue); font-weight: bold; }
 .status-completed { color: var(--success-green); font-weight: bold; }
@@ -293,3 +335,6 @@ pre {
         gap: 10px;
     }
 }
+
+/* --- Add to the end of style.css --- */
+

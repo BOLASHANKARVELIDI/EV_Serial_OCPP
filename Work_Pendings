@@ -1,0 +1,29 @@
+Upadate the Handling the Transactions and Processing the OCPP Data.
+
+
+// When ever new transaction starts, last transaction details in the table meter stop and reason were changed.
+// one more thing is when ever the new transactions occurs the ew transaction is placed according the number priority of the trnasaction id. But it should display like all the transactions should come one by one. 
+
+1. Energy Meter calculation after the Stop Transaction. MeterStop is updating live but after the stop transaction the value is added correctely.
+2. after the new transaction the prvious details of meter stop and reason are missing.
+
+Transaction Details (OCPP)
+Search Transaction...
+🔄 Refresh
+📁 Export CSV
+ID	Connector	ID Tag	Start Time	Stop Time	Meter Start	Meter Stop	Energy (Wh)	Status	Reason
+11400780	1	112233	6/21/2025, 5:58:13 PM	6/21/2025, 5:58:55 PM	479	498	19	Completed	EmergencyStop
+97870925	1	A366C515	6/21/2025, 5:55:10 PM	6/21/2025, 5:55:29 PM	470	470	-470	Completed	-
+
+ID	Connector	ID Tag	Start Time	Stop Time	Meter Start	Meter Stop	Energy (Wh)	Status	Reason
+11400780	1	112233	6/21/2025, 5:58:13 PM	6/21/2025, 5:58:56 PM	479	479	-479	Completed	-
+75078848	1	A366C515	6/21/2025, 6:00:51 PM	6/21/2025, 6:01:34 PM	499	519	20	Completed	EmergencyStop
+97870925	1	A366C515	6/21/2025, 5:55:10 PM	6/21/2025, 5:55:29 PM	470	470	-470	Completed	-
+
+
+
+
+when heart beat comes handle that also. 
+
+Heart to the WS online/offline.
+latest time to show the time for device online.

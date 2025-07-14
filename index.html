@@ -63,7 +63,7 @@
         </div>
 
         <!-- Serial Data Display -->
-        <div id="serial-data" class="data-display"></div>
+        <pre id="serial-data" class="data-display"></pre>
     </section>
 
     <!-- JSON Data Separator Section -->
@@ -77,6 +77,17 @@
             <button id="save-separator-btn">💾 Save</button>
             <input type="text" id="search-separator" placeholder="Search JSON...">
             <button id="search-separator-btn">🔍</button>
+            
+            <!-- ADD THE FOLLOWING CONTROLS -->
+            <div class="control-group">
+                <input type="checkbox" id="toggle-json-view" checked>
+                <label for="toggle-json-view">Expanded View</label>
+            </div>
+            <div class="control-group">
+                <label for="json-packet-spacing">Spacing:</label>
+                <input type="number" id="json-packet-spacing" value="10" min="0" max="50" style="width: 70px;">
+            </div>
+            <!-- END OF ADDED CONTROLS -->
         </div>
 
         <!-- JSON Data Display -->
@@ -90,7 +101,7 @@
         <div class="control-bar">
             <input type="text" id="search-transaction" placeholder="Search Transaction...">
             <button id="refresh-btn">🔄 Refresh</button>
-            <button id="export-btn">📁 Export CSV</button>
+            <button id="export-csv-btn">📁 Export CSV</button>
         </div>
 
         <!-- Transaction Table -->

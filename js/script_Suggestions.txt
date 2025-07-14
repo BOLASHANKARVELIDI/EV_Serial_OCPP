@@ -1,0 +1,123 @@
+function extractJsonPackets(str) {
+    const packets = [];
+    let buffer = "";
+    let inJson = false;
+    let braceCount = 0;
+    let bracketCount = 0;
+
+    function startNewJson(char, nextChar) {
+        return !inJson && char === '[' && (nextChar === '2' || nextChar === '3');
+    }
+
+    function updateCounts(char) {
+        if (char === '[') bracketCount++;
+        else if (char === ']') bracketCount--;
+        else if (char === '{') braceCount++;
+        else if (char === '}') braceCount--;
+    }
+
+    for (let i = 0; i < str.length; i++) {
+        const char = str[i];
+
+        if (startNewJson(char, str[i + 1])) {
+            inJson = true;
+            buffer = char;
+            bracketCount = 1;
+            continue;
+        }
+
+        if (inJson) {
+            buffer += char;
+            updateCounts(char);
+
+            if (bracketCount === 0 && braceCount === 0) {
+                packets.push(buffer);
+                inJson = false;
+                buffer = "";
+                braceCount = 0;
+                bracketCount = 0;
+            }
+        }
+    }
+
+    return packets;
+}
+
+==================================================================
+line 170 &&  extractJsonPackets.
+--------------------------------
+        for (let i = 0; i < str.length; i++) {
+            const char = str[i];
+            
+            // Handle OCPP packets that start with [2 or [3
+            if (!inJson && char === '[' && (str[i+1] === '2' || str[i+1] === '3')) {
+                inJson = true;
+                buffer = char;
+                bracketCount = 1;
+                continue;
+            }
+            
+            if (inJson) {
+                buffer += char;
+                
+                // Count brackets/braces to find matching pairs
+                if (char === '[') bracketCount++;
+                if (char === ']') bracketCount--;
+                if (char === '{') braceCount++;
+                if (char === '}') braceCount--;
+                
+                // When we find a complete packet
+                if (bracketCount === 0 && braceCount === 0) {
+                    packets.push(buffer);
+                    buffer = "";
+                    inJson = false;
+                    braceCount = 0;
+                    bracketCount = 0;
+                }
+            }
+        }
+        
+        return packets;
+==================================================================
+// Need to Update.
+case "StartTransaction": {
+    const payload = packet[3] || {};
+    state.requestResponseMap[messageId] = {
+        request: packet,
+        timestamp: new Date(),
+        connectorId: payload.connectorId || 1,
+        idTag: payload.idTag || "-",
+        meterStart: payload.meterStart || 0
+    };
+    break;
+}
+
+==========================================================
+// Need to Update.
+function handleStartTransactionResponse(requestPacket, responsePayload) {
+    const transactionId = responsePayload.transactionId;
+    const messageId = requestPacket[1];
+    const requestInfo = state.requestResponseMap[messageId];
+
+    if (!transactionId || !requestInfo) return;
+
+    state.transactions[transactionId] = {
+        connectorId: requestInfo.connectorId,
+        idTag: requestInfo.idTag,
+        startTime: requestInfo.timestamp.toLocaleString(),
+        meterStart: requestInfo.meterStart,
+        status: "Active",
+        meterStop: 0,
+        energyWh: 0,
+        reason: "-"
+    };
+
+    updateTransactionTable();
+}
+
+✅ Summary of Flow Now:
+Step	Action
+Request Received	StartTransaction → payload stored in state.requestResponseMap
+Response Received	StartTransaction response → contains transactionId, use it + request data to create full transaction
+Displayed in UI	updateTransactionTable() fills the transaction log
+============================================

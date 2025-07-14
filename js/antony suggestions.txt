@@ -1,0 +1,43 @@
+
+    function syntaxHighlightJSON(json) {
+        if (!json) return '';
+
+        // First remove any existing HTML tags that might have been added previously
+        const cleanJson = json.replace(/<[^>]*>?/gm, '');
+        
+        const cleanJson2 =  cleanJson.replace(/"([^"]+)"\s*:/g, '<span class="json-key">"$1"</span>:')
+        const cleanJson3 = cleanJson2.replace(/(:\s*|\[\s*)\b(-?\d+(\.\d+)?([eE][+-]?\d+)?)(?=[,}\]])/g, '<span class="json-number">$2</span>')
+            
+        // Keys: "key": => highlight just the key
+        // Numbers: only if they appear as values (after : or [)
+        
+        // Booleans/null
+        const cleanJson4 = cleanJson3.replace(/\b(true|false|null)\b/g, '<span class="json-boolean">$1</span>')
+        // Strings: only remaining strings (i.e. values, not keys)
+        const cleanJson5 = cleanJson4.replace(
+                                        /("(?:[^"\\]|\\.)*")/g,
+                                        (match, p1, offset, string) => {
+                                            // Check if match is inside a tag (e.g., <span class="...">)
+                                            const before = string.slice(0, offset);
+                                            const inTag = /<[^>]*$/.test(before) && !/>/.test(before);
+
+                                            // Don't wrap if inside HTML tag
+                                            if (inTag) return match;
+
+                                            // Don't wrap if already inside a span (e.g., <span class="json-key">"key"</span>)
+                                            const after = string.slice(offset + match.length);
+                                            const isAlreadyWrapped = /<\/span>/.test(after);
+
+                                            if (isAlreadyWrapped) return match;
+
+                                            return `<span class="json-string">${match}</span>`;
+                                        }
+                                    );
+
+        console.log("Cleaning stage 0 ", cleanJson);
+        console.log("Cleaning stage 1 ", cleanJson2)
+        console.log("Cleaning stage 2 ",cleanJson3)
+        console.log("Cleaning stage 3 ",cleanJson4)
+        console.log("Cleaning stage 4 ",cleanJson5)
+        return cleanJson5
+    }
