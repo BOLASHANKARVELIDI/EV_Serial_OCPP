@@ -27,3 +27,38 @@ when heart beat comes handle that also.
 
 Heart to the WS online/offline.
 latest time to show the time for device online.
+
+12/07/2025
+
+Json Packet data display issues like json-key"> were solved.
+- Added the expanded view and normal view. Need to work o the when the view change it is going to the new packet.
+-Transcation table data updation is solved.
+
+
+New Modfications.
+1. When the view in JSON Data Separator changes. then it has to show/point the current packet not the new packet.
+2. Transaction table, transaction id --> logs and graphical vire of the whole transaction.
+3. Ws, Serial, Timer need to execute.
+4. Serial Monitor, need to detlete Auto-Scroll. and execute the auto scrollling like JSON Data Separator.
+5. Need to execute the flashing the firmware.
+6. Need to connect to the device get the characerterstics. pass wifi credentials and websocket link.
+7. need to execute kcpp flow.
+8. KCPP modification.
+9. Need to implement Application type both windows and mobile
+10. need to merge the automation APP & Serial APP together and create need application.
+11. Need to create multiple Serial data readings in the Windows applications. 
+
+New Application targets.
+- KCPP Flow Automation: 
+    i. mqtt connection
+    ii. Subscribe to the topic
+    iii. publish to the topic.
+    iv. Write the Test Cases.
+    v. execute the automation scripts.
+    vi. Create  the test case full, optional, divisional executions.
+    vii. Generate the Reports for the executed Test Cases.
+
+-- OCPP Flow.
+    i. Need to understand.
+
+    ii. Execute the multiple serial Data Reading.
